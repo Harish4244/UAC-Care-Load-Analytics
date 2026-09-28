@@ -1,21 +1,22 @@
 # Production Deployment Guide — UAC System Capacity & Care Load Analytics
 
-**HHS Unaccompanied Alien Children Program — Executive Analytics Dashboard v3.0**
+**HHS Unaccompanied Alien Children Program — Executive Analytics Dashboard v3.2**
 
 ---
 
 ## 1. Overview & Architecture
 
-This repository contains the complete production-ready source code, data pipelines, container configurations, and documentation for the **UAC System Capacity & Care Load Analytics** platform.
+This repository contains the complete production-ready source code, data pipelines, automated tests, container configurations, and documentation for the **UAC System Capacity & Care Load Analytics** platform.
 
 ### Tech Stack
 - **Dashboard Framework:** Streamlit (>=1.35, <2.0)
-- **Data Manipulation:** Pandas (>=2.0, <3.0), NumPy (>=1.24, <2.4)
+- **Data Engine:** Pandas (>=2.0, <3.0), NumPy (>=1.24, <3.0)
 - **Visualization Engine:** Plotly (>=5.20, <6.0)
 - **Runtime:** Python 3.11 (`runtime.txt`)
-- **Containers:** Docker (`Dockerfile` + `.dockerignore`)
+- **Containers:** Docker (`Dockerfile` + `.dockerignore`) with built-in health checks
 - **PaaS Deployments:** Heroku / Railway / Render (`Procfile`)
 - **Design System:** Custom Enterprise Glassmorphism CSS, Inter Typography, Dark Navy Brand Palette (`.streamlit/config.toml`)
+- **Automated Tests:** Unit & integration test suite (`tests/`)
 
 ---
 
@@ -28,13 +29,13 @@ This repository contains the complete production-ready source code, data pipelin
 ### Quick Start
 ```bash
 # 1. Clone repository & enter workspace
-git clone <your-repo-url>
-cd <repo-folder>
+git clone https://github.com/Harish4244/UAC-Care-Load-Analytics.git
+cd UAC-Care-Load-Analytics
 
 # 2. Create virtual environment
 python -m venv .venv
 
-# Active on Windows:
+# Activate on Windows:
 .venv\Scripts\activate
 # Activate on macOS/Linux:
 # source .venv/bin/activate
@@ -50,11 +51,14 @@ App will launch at `http://localhost:8501`.
 ### Data Ingestion & Pipeline Regeneration
 To clean new raw HHS data exports and derive updated operational metrics:
 ```bash
-# Step 1: Clean raw data (auto-detects the raw CSV file in folder)
+# Step 1: Clean raw data (auto-detects from data/raw/ or root)
 python clean_data.py
 
 # Step 2: Derive rolling metrics, streaks, volatility & quality flags
 python derive_metrics.py
+
+# Step 3: Run full automated test suite
+python -m unittest discover tests
 ```
 
 ---
@@ -63,19 +67,15 @@ python derive_metrics.py
 
 Streamlit Community Cloud provides 1-click continuous deployment directly from your GitHub repository.
 
-1. **Push your code to GitHub**:
+1. **Commit and Push to GitHub**:
    ```bash
-   git init
-   git config --global core.autocrlf input
    git add .
-   git commit -m "feat: complete production release v3.0"
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/<your-repo-name>.git
-   git push -u origin main
+   git commit -m "feat: complete production release v3.2 with modular architecture"
+   git push origin main
    ```
 2. Navigate to [share.streamlit.io](https://share.streamlit.io) and log in with GitHub.
 3. Click **"New app"**.
-4. Select your repository, branch (`main`), and set **Main file path** to `streamlit_app.py`.
+4. Select your repository (`Harish4244/UAC-Care-Load-Analytics`), branch (`main`), and set **Main file path** to `streamlit_app.py`.
 5. Under **Advanced settings**, confirm Python version is set to **3.11** (matching `runtime.txt`).
 6. Click **Deploy**. Your app will be live with an SSL-secured URL (`https://<app-name>.streamlit.app`).
 
@@ -83,19 +83,19 @@ Streamlit Community Cloud provides 1-click continuous deployment directly from y
 
 ## 4. Deployment Option 2: Docker Container (Cloud Run / AWS ECS / Self-Hosted)
 
-The included `Dockerfile` utilizes a minimal `python:3.11-slim` base, non-root best practices, built-in health checks (`/_stcore/health`), and port binding for container orchestrators.
+The included `Dockerfile` utilizes a minimal `python:3.11-slim` base, non-root best practices, built-in health checks (`/_stcore/health` via native Python standard library), and port binding for container orchestrators.
 
 ### Build and Run Locally
 ```bash
 # Build image
-docker build -t uac-analytics:v3 .
+docker build -t uac-analytics:v3.2 .
 
 # Run container
-docker run -p 8501:8501 --name uac-dashboard uac-analytics:v3
+docker run -p 8501:8501 --name uac-dashboard uac-analytics:v3.2
 ```
 Test health check:
 ```bash
-curl http://localhost:8501/_stcore/health
+python -c "import urllib.request; print(urllib.request.urlopen('http://localhost:8501/_stcore/health').read().decode())"
 ```
 
 ### Deploy to Google Cloud Run
@@ -142,8 +142,8 @@ Before final sign-off, verify the following:
   - Tab 5: Data Quality Auditor, Gap Distribution, & CSV exporter
 - [x] Dynamic metric cards update across date range filters.
 - [x] In-memory file uploader accepts raw HHS CSV files and instantly re-derives all metrics on the fly.
+- [x] Automated test suite in `tests/` passes 100% of test assertions.
 - [x] `requirements.txt` is strictly trimmed to 4 packages (no bloat).
-- [x] No UTF-8 BOM encoding issues on any file.
 - [x] Dockerfile builds with healthcheck enabled.
 - [x] Clean `.dockerignore` and `.gitignore` preventing build pollution.
 

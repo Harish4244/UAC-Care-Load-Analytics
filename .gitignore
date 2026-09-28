@@ -1,9 +1,41 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
 .env
 .venv/
-*.pdf
-*.png
-*.jpg
-justaddeduodated/
-requirements (2).txt
+env/
+venv/
+ENV/
+
+# Streamlit secrets (keep local)
+.streamlit/secrets.toml
+
+# OS / Editor artifacts
+.DS_Store
+Thumbs.db
+*.swp
+*.swo

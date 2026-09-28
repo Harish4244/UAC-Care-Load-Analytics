@@ -1,47 +1,52 @@
+"""
+Step 2 — Compute derived capacity metrics, streaks, volatility, and validation flags
+
+Usage:
+    python derive_metrics.py
+"""
+
+from __future__ import annotations
+
+import os
 import pandas as pd
-import numpy as np
 
-df = pd.read_csv('cleaned_uac_data.csv', parse_dates=['date'])
-df = df.sort_values('date').reset_index(drop=True)
+from src.pipeline import derive_metrics
 
-# --- Validation flags ---
-df['flag_transfer_exceeds_custody'] = df['cbp_transferred_out'] > df['cbp_custody']
-df['flag_discharge_exceeds_care'] = df['hhs_discharged'] > df['hhs_care']
-df['gap_days'] = df['date'].diff().dt.days
 
-# --- Derived capacity metrics ---
-df['total_system_load'] = df['cbp_custody'] + df['hhs_care']
-df['net_daily_intake'] = df['cbp_transferred_out'] - df['hhs_discharged']
-df['care_load_growth_pct'] = df['hhs_care'].pct_change() * 100
-df['total_load_growth_pct'] = df['total_system_load'].pct_change() * 100
+def main() -> None:
+    # Resolve input path
+    candidates = ["data/processed/cleaned_uac_data.csv", "cleaned_uac_data.csv"]
+    input_path = None
+    for p in candidates:
+        if os.path.exists(p):
+            input_path = p
+            break
 
-# Backlog indicator: sustained positive net intake (rolling sign persistence)
-df['net_intake_positive'] = df['net_daily_intake'] > 0
-# rolling 7-obs count of positive net intake days (backlog pressure streak)
-df['backlog_streak'] = df['net_intake_positive'].groupby((~df['net_intake_positive']).cumsum()).cumcount() + 1
-df.loc[~df['net_intake_positive'], 'backlog_streak'] = 0
+    if not input_path:
+        raise FileNotFoundError(
+            "cleaned_uac_data.csv not found. Please run `python clean_data.py` first."
+        )
 
-# Rolling averages (by observation, since reporting isn't strictly daily)
-df['hhs_care_roll7'] = df['hhs_care'].rolling(7, min_periods=3).mean()
-df['hhs_care_roll14'] = df['hhs_care'].rolling(14, min_periods=5).mean()
-df['total_load_roll7'] = df['total_system_load'].rolling(7, min_periods=3).mean()
-df['net_intake_roll7'] = df['net_daily_intake'].rolling(7, min_periods=3).mean()
+    df = pd.read_csv(input_path, parse_dates=["date"])
+    df = derive_metrics(df)
 
-# Volatility: rolling std of hhs_care pct change
-df['care_volatility_roll14'] = df['care_load_growth_pct'].rolling(14, min_periods=5).std()
+    # Save to data/processed and root
+    os.makedirs("data/processed", exist_ok=True)
+    df.to_csv("data/processed/uac_metrics.csv", index=False)
+    df.to_csv("uac_metrics.csv", index=False)
 
-# Discharge offset ratio: discharges / transfers-in (ability to relieve load)
-df['discharge_offset_ratio'] = df['hhs_discharged'] / df['cbp_transferred_out'].replace(0, np.nan)
+    print("Validation checks:")
+    print("Transfer > custody flags:", int(df["flag_transfer_exceeds_custody"].sum()))
+    print("Discharge > care flags:   ", int(df["flag_discharge_exceeds_care"].sum()))
+    print()
+    print("Capacity Summary:")
+    print(f"Max backlog streak:    {int(df['backlog_streak'].max())} observations")
+    max_hhs = df.loc[df["hhs_care"].idxmax()]
+    min_hhs = df.loc[df["hhs_care"].idxmin()]
+    print(f"Peak HHS care:         {int(max_hhs['hhs_care']):,} on {max_hhs['date'].strftime('%Y-%m-%d')}")
+    print(f"Trough HHS care:       {int(min_hhs['hhs_care']):,} on {min_hhs['date'].strftime('%Y-%m-%d')}")
+    print("\n[OK] data/processed/uac_metrics.csv and uac_metrics.csv written successfully.")
 
-df.to_csv('uac_metrics.csv', index=False)
 
-print("Validation issues:")
-print("Transfer > custody:", df['flag_transfer_exceeds_custody'].sum())
-print("Discharge > care:", df['flag_discharge_exceeds_care'].sum())
-print()
-print("Summary stats:")
-print(df[['cbp_intake','cbp_custody','cbp_transferred_out','hhs_care','hhs_discharged','total_system_load','net_daily_intake']].describe())
-print()
-print("Max backlog streak:", df['backlog_streak'].max())
-print("Date of max HHS care:", df.loc[df['hhs_care'].idxmax(),'date'], df['hhs_care'].max())
-print("Date of min HHS care:", df.loc[df['hhs_care'].idxmin(),'date'], df['hhs_care'].min())
+if __name__ == "__main__":
+    main()

@@ -1,7 +1,6 @@
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
 .Python
 env/
 venv/
@@ -9,7 +8,8 @@ venv/
 .git/
 .gitignore
 .github/
-justaddeduodated/
+docs/
+tests/
 *.docx
 *.pdf
 .env
