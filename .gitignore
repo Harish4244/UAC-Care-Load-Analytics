@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+*.pdf
+*.png
+*.jpg
+justaddeduodated/
+requirements (2).txt
