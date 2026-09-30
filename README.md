@@ -2,6 +2,11 @@
 
 **HHS Unaccompanied Alien Children Program** — Production-grade interactive operational analytics dashboard built with Streamlit, Plotly, Pandas, and NumPy.
 
+[![Research Paper](https://img.shields.io/badge/Research%20Paper-Read%20Online-blue.svg)](docs/RESEARCH_PAPER.md)
+[![Test Suite](https://img.shields.io/badge/Tests-Passing%20(7%2F7)-success.svg)](tests/)
+
+📖 **Read the Academic Research Paper:** [docs/RESEARCH_PAPER.md](docs/RESEARCH_PAPER.md)
+
 ---
 
 ## 🏗️ Project Architecture & Directory Structure
@@ -17,6 +22,7 @@ UAC-Care-Load-Analytics/
 │       ├── cleaned_uac_data.csv
 │       └── uac_metrics.csv
 ├── docs/                         # Executive & research documentation
+│   ├── RESEARCH_PAPER.md         # Full Academic Research Paper (Markdown)
 │   ├── UAC_Executive_Summary.docx
 │   └── UAC_Research_Paper.docx
 ├── src/                          # Modular core application engine
