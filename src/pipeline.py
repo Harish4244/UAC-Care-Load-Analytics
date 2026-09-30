@@ -35,9 +35,11 @@ def clean_raw_dataframe(raw: pd.DataFrame) -> pd.DataFrame:
                       "hhs_care", "hhs_discharged"] + list(df.columns[6:])
 
     # Parse date
-    df["date"] = pd.to_datetime(df["date"], format="%B %d, %Y", errors="coerce")
-    if df["date"].isna().all():
-        df["date"] = pd.to_datetime(raw.iloc[:, 0], errors="coerce")
+    if not pd.api.types.is_datetime64_any_dtype(df["date"]):
+        parsed_dates = pd.to_datetime(df["date"], format="%B %d, %Y", errors="coerce")
+        if parsed_dates.isna().all():
+            parsed_dates = pd.to_datetime(raw.iloc[:, 0], errors="coerce")
+        df["date"] = parsed_dates
 
     # Clean numeric fields
     for col in NUMERIC_COLS:

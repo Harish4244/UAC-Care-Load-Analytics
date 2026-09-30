@@ -787,7 +787,7 @@ with tab4:
                 line=dict(width=0), name="±1.5σ band",
             ))
             fig_f.add_vline(
-                x=result["history_dates"].iloc[-1],
+                x=pd.to_datetime(result["history_dates"].iloc[-1]).timestamp() * 1000,
                 line_dash="dot", line_color=GRAY, line_width=1,
                 annotation_text="Forecast →",
                 annotation_position="top left",

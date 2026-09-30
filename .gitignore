@@ -27,9 +27,14 @@ wheels/
 # Virtual Environments
 .env
 .venv/
+**/.venv/
 env/
 venv/
 ENV/
+node_modules/
+**/node_modules/
+dist/
+**/dist/
 
 # Streamlit secrets (keep local)
 .streamlit/secrets.toml
